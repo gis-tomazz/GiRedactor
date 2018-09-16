@@ -146,7 +146,7 @@ public class GiRedactor {
      * 
      * @param input pot do vhodne datoteke,  npr. c:\testi\mojDokument.pdf
      * @param output ime izhodne datoteke (če že obstaja, bo prepisana; če je odprta bom vrgel exception),  npr. c:\output\mojDokument_redacted.pdf
-     * @param gsbat pot do batch datoteke (npr.: "c:\\bin\\gs.bat") z naslednjo vsebino (prilagodi pot do Ghostscripta v batch datoteki glede na svoj sistem): "C:\Program Files\gs\gs9.23\bin\gswin64c.exe" -dFirstPage=%1 -dLastPage=%2 -dSAFER -dBATCH -dNOPAUSE -dNOCACHE -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sColorConversionStrategy=/LeaveColorUnchanged -dAutoFilterColorImages=true -dAutoFilterGrayImages=true -dDownsampleMonoImages=false -dDownsampleGrayImages=false -dDownsampleColorImages=false -sOutputFile=%4 %3 2> nul
+     * @param gsbat pot do batch datoteke (npr.: "c:\\bin\\gs.bat") z naslednjo vsebino (prilagodi pot do Ghostscripta v batch datoteki glede na svoj sistem):    	   	//"C:\Program Files\gs\gs9.06\bin\gswin64c.exe" -dFirstPage=%1 -dLastPage=%2 -dSAFER -dBATCH -dNOPAUSE -dNOCACHE -sDEVICE=pdfwrite -sColorConversionStrategy=/LeaveColorUnchanged -dAutoFilterColorImages=true -dAutoFilterGrayImages=true -dDownsampleMonoImages=false -dDownsampleGrayImages=false -dDownsampleColorImages=false -q -sOutputFile=%%stdout %3 2> nul
      * 
      * @return tab separated podatki o zakrivanju (baseName datoteke, porabljen čas za zakrivanje, število strani z emšo, seznam strani z emšo, velikost datoteke pred zakrivanjem, velikost datoteke po zakrivanju oziroma "0", če v dokumentu ne najde EMŠO 
      *   
@@ -175,8 +175,6 @@ public class GiRedactor {
    	   	}
    	   	
    	   	if (!pageListString.isEmpty()) pageListString = "\""+pageListString.substring(0, pageListString.length() - 1)+"\"";
-   	   	
-   	   	//"C:\Program Files\gs\gs9.06\bin\gswin64c.exe" -dFirstPage=%1 -dLastPage=%2 -dSAFER -dBATCH -dNOPAUSE -dNOCACHE -sDEVICE=pdfwrite -sColorConversionStrategy=/LeaveColorUnchanged -dAutoFilterColorImages=true -dAutoFilterGrayImages=true -dDownsampleMonoImages=false -dDownsampleGrayImages=false -dDownsampleColorImages=false -q -sOutputFile=%%stdout %3 2> nul
 
    	 	PdfCleanUpTool cleaner = new PdfCleanUpTool(pdf);
     	
