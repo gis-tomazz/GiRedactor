@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.pdf.PdfDictionary;
@@ -147,14 +146,13 @@ public class GiRedactor {
      * 
      * @param input pot do vhodne datoteke,  npr. c:\testi\mojDokument.pdf
      * @param output ime izhodne datoteke (če že obstaja, bo prepisana; če je odprta bom vrgel exception),  npr. c:\output\mojDokument_redacted.pdf
-     * @param tempFolder pot do mape, kamor Ghostscript shranjuje začasne datoteke - funkcija gsConvert po uporabi te začasne datoteke zbriše (POZOR!!! pot se mora končati z backslashom), npr.: c:\temp\
      * @param gsbat pot do batch datoteke (npr.: "c:\\bin\\gs.bat") z naslednjo vsebino (prilagodi pot do Ghostscripta v batch datoteki glede na svoj sistem): "C:\Program Files\gs\gs9.23\bin\gswin64c.exe" -dFirstPage=%1 -dLastPage=%2 -dSAFER -dBATCH -dNOPAUSE -dNOCACHE -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sColorConversionStrategy=/LeaveColorUnchanged -dAutoFilterColorImages=true -dAutoFilterGrayImages=true -dDownsampleMonoImages=false -dDownsampleGrayImages=false -dDownsampleColorImages=false -sOutputFile=%4 %3 2> nul
      * 
      * @return tab separated podatki o zakrivanju (baseName datoteke, porabljen čas za zakrivanje, število strani z emšo, seznam strani z emšo, velikost datoteke pred zakrivanjem, velikost datoteke po zakrivanju oziroma "0", če v dokumentu ne najde EMŠO 
      *   
      */
     
-    public static String gsConvert(String input, String output, String tempFolder, String gsbat) throws Exception {
+    public static String gsConvert(String input, String output, String gsbat) throws Exception {
     	long start = System.currentTimeMillis();
     	List<PdfCleanUpLocation> cleanupLocations=getCleanupLocations(input);
     	int locationCount=cleanupLocations.size();
@@ -177,9 +175,8 @@ public class GiRedactor {
    	   	}
    	   	
    	   	if (!pageListString.isEmpty()) pageListString = "\""+pageListString.substring(0, pageListString.length() - 1)+"\"";
-   	   	    	
-    	//"C:\Program Files\gs\gs9.23\bin\gswin64c.exe" -dFirstPage=%1 -dLastPage=%2 -dSAFER -dBATCH -dNOPAUSE -dNOCACHE -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sColorConversionStrategy=/LeaveColorUnchanged -dAutoFilterColorImages=true -dAutoFilterGrayImages=true -dDownsampleMonoImages=false -dDownsampleGrayImages=false -dDownsampleColorImages=false -sOutputFile=%4 %3 2> nul
-    	//"C:\Program Files\gs\gs9.23\bin\gswin64c.exe" -sPageList=%1 -dSAFER -dBATCH -dNOPAUSE -dNOCACHE -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sColorConversionStrategy=/LeaveColorUnchanged -dAutoFilterColorImages=true -dAutoFilterGrayImages=true -dDownsampleMonoImages=false -dDownsampleGrayImages=false -dDownsampleColorImages=false -sOutputFile=%3 %2 2> nul
+   	   	
+   	   	//"C:\Program Files\gs\gs9.06\bin\gswin64c.exe" -dFirstPage=%1 -dLastPage=%2 -dSAFER -dBATCH -dNOPAUSE -dNOCACHE -sDEVICE=pdfwrite -sColorConversionStrategy=/LeaveColorUnchanged -dAutoFilterColorImages=true -dAutoFilterGrayImages=true -dDownsampleMonoImages=false -dDownsampleGrayImages=false -dDownsampleColorImages=false -q -sOutputFile=%%stdout %3 2> nul
 
    	 	PdfCleanUpTool cleaner = new PdfCleanUpTool(pdf);
     	
@@ -192,20 +189,16 @@ public class GiRedactor {
    	   		PdfCleanUpLocation loc=cleanupLocations.get(i);
    	   		int pnum=loc.getPage();
    	   		if (pageList.add(pnum)) {
-   	   			String tmpFileName=tempFolder+UUID.randomUUID()+"_"+baseName;
-	   	   		String[] CMD_ARRAY = {gsbat,pnum+"",pnum+"", input, tmpFileName };
+	   	   		String[] CMD_ARRAY = {gsbat,pnum+"",pnum+"", input };
 	   	    	ProcessBuilder pb = new ProcessBuilder(CMD_ARRAY);
 	   	    	Process p = pb.start(); // Start the process.
-	   	    	p.waitFor(); // Wait for the process to finish.
 	   	    	
-	   	    	PdfDocument r1 = new PdfDocument(new PdfReader(tmpFileName));
+	   	    	PdfDocument r1 = new PdfDocument(new PdfReader(p.getInputStream()));
 	   	    	PdfOutline r1root=r1.getOutlines(false);
 	   	    	if (r1root!=null) r1root.getAllChildren().clear();	//clear outlines, sicer na koncu itak rebuildam, ampak vseeno ...
    	   			pdf.removePage(pnum);
    	   	   	 	r1.copyPagesTo(1,1, pdf,pnum);
    	    	 	r1.close();
-   	    	 	File f1=new File(tmpFileName);
-   	    	 	f1.delete();
    	   		}
    	   	 	cleaner.addCleanupLocation(loc);
    	   	}
