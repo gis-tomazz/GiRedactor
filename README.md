@@ -5,7 +5,7 @@ iText7 redacting "Unique Master Citizen Number" https://en.wikipedia.org/wiki/Un
 ## Requirements
 
 - iText7 (see the pom.xml https://github.com/gis-tomazz/GiRedactor/blob/master/pom.xml)
-- Ghostscript (https://github.com/gis-tomazz/GiRedactor/blob/master/GiRedactor.java#L151)
+- Ghostscript (https://github.com/gis-tomazz/GiRedactor/blob/master/GiRedactor.java#L149)
 
 ## How to use it
 
@@ -18,6 +18,6 @@ GiRedactor.gsConvert(input,output,gsbat);
 
 ```
 
-See the gsConvert function description in the code: https://github.com/gis-tomazz/GiRedactor/blob/master/GiRedactor.java#L145
+See the gsConvert function description in the code: https://github.com/gis-tomazz/GiRedactor/blob/master/GiRedactor.java#L144
 
 
