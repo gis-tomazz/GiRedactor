@@ -12,10 +12,9 @@ iText7 redacting "Unique Master Citizen Number" https://en.wikipedia.org/wiki/Un
 ```
 String input="c:\\test\\test_in.pdf";
 String output="c:\\test\\test_out.pdf";
-String tmpFolder="c:\\temp\\";
 String gsbat="c:\\bin\\gs.bat";
 
-GiRedactor.gsConvert(input,output,tempFolder,gsbat);
+GiRedactor.gsConvert(input,output,gsbat);
 
 ```
 
