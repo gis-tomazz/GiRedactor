@@ -1,6 +1,8 @@
 package iText;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -144,17 +146,48 @@ public class GiRedactor {
      }
     
     /*
-     * Zakrije EMŠO v PDF-ju z OCR slojem
+     * Zakrije EMŠO v PDF-ju z OCR slojem in shrani rezultat v datoteko
      * 
      * @param input pot do vhodne datoteke,  npr. c:\testi\mojDokument.pdf
-     * @param output ime izhodne datoteke (če že obstaja, bo prepisana; če je odprta bom vrgel exception),  npr. c:\output\mojDokument_redacted.pdf
-     * @param gsbat pot do batch datoteke (npr.: "c:\\bin\\gs.bat") z naslednjo vsebino (prilagodi pot do Ghostscripta v batch datoteki glede na svoj sistem):    	   	//"C:\Program Files\gs\gs9.06\bin\gswin64c.exe" -dFirstPage=%1 -dLastPage=%2 -dSAFER -dBATCH -dNOPAUSE -dNOCACHE -sDEVICE=pdfwrite -sColorConversionStrategy=/LeaveColorUnchanged -dAutoFilterColorImages=true -dAutoFilterGrayImages=true -dDownsampleMonoImages=false -dDownsampleGrayImages=false -dDownsampleColorImages=false -q -sOutputFile=%%stdout %3 2> nul
+     * @param output OutputStream, npr. System.out
+     * @param gsbat pot do batch datoteke (npr.: "c:\\bin\\gs.bat")
+     * 
+     * @return tab separated podatki o zakrivanju (baseName datoteke, porabljen čas za zakrivanje, število strani z emšo, seznam strani z emšo, velikost datoteke pred zakrivanjem, velikost datoteke po zakrivanju oziroma "0", če v dokumentu ne najde EMŠO 
+     *   
+     */
+    
+    public static String gsConvert(String input, OutputStream output, String gsbat) throws Exception {
+    	return gsConvert(input, null, gsbat, output);
+    }
+    
+    /*
+     * Zakrije EMŠO v PDF-ju z OCR slojem in shrani rezultat v datoteko
+     * 
+     * @param input pot do vhodne datoteke,  npr. c:\testi\mojDokument.pdf
+     * @param output ime izhodne datoteke (če že obstaja, bo prepisana; če je odprta bo vrgel exception),  npr. c:\output\mojDokument_redacted.pdf
+     * @param gsbat pot do batch datoteke (npr.: "c:\\bin\\gs.bat")
      * 
      * @return tab separated podatki o zakrivanju (baseName datoteke, porabljen čas za zakrivanje, število strani z emšo, seznam strani z emšo, velikost datoteke pred zakrivanjem, velikost datoteke po zakrivanju oziroma "0", če v dokumentu ne najde EMŠO 
      *   
      */
     
     public static String gsConvert(String input, String output, String gsbat) throws Exception {
+    	return gsConvert(input, output, gsbat, null);
+    }
+        
+    /*
+     * Zakrije EMŠO v PDF-ju z OCR slojem in shrani rezultat v datoteko
+     * 
+     * @param input pot do vhodne datoteke,  npr. c:\testi\mojDokument.pdf
+     * @param output ime izhodne datoteke (če že obstaja, bo prepisana; če je odprta bo vrgel exception),  npr. c:\output\mojDokument_redacted.pdf
+     * @param gsbat pot do batch datoteke (npr.: "c:\\bin\\gs.bat") z naslednjo vsebino (prilagodi pot do Ghostscripta v batch datoteki glede na svoj sistem):    	   	//"C:\Program Files\gs\gs9.06\bin\gswin64c.exe" -dFirstPage=%1 -dLastPage=%2 -dSAFER -dBATCH -dNOPAUSE -dNOCACHE -sDEVICE=pdfwrite -sColorConversionStrategy=/LeaveColorUnchanged -dAutoFilterColorImages=true -dAutoFilterGrayImages=true -dDownsampleMonoImages=false -dDownsampleGrayImages=false -dDownsampleColorImages=false -q -sOutputFile=%%stdout %3 2> nul
+     * @param os, OutputStream, če je različen od nič se podatki izpišejo na OutputStream in ne v izhodno datoteko določeno z output; v tem primeru je lahko ime izhodne datoteke poljubno, ker se zanemari
+     * 
+     * @return tab separated podatki o zakrivanju (baseName datoteke, porabljen čas za zakrivanje, število strani z emšo, seznam strani z emšo, velikost datoteke pred zakrivanjem, velikost datoteke po zakrivanju oziroma "0", če v dokumentu ne najde EMŠO 
+     *   
+     */
+        
+    public static String gsConvert(String input, String output, String gsbat, OutputStream os) throws Exception {
     	long start = System.currentTimeMillis();
     	String tempFolder = System.getProperty("java.io.tmpdir");
     	
@@ -173,7 +206,17 @@ public class GiRedactor {
     	int locationCount=cleanupLocations.size();
     	if (locationCount==0) return "0";
     	
-   		PdfDocument pdf = new PdfDocument(new PdfReader(input),new PdfWriter(output));
+    	PdfWriter pdfWriter;
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	
+    	if (os!=null) {
+    		pdfWriter = new PdfWriter(baos);
+    	}
+    	else {
+    		pdfWriter = new PdfWriter(output);    		
+    	}
+    	
+   		PdfDocument pdf = new PdfDocument(new PdfReader(input),pdfWriter);
    	   	
    	   	PdfNameTree destsTree=pdf.getCatalog().getNameTree(PdfName.Dests);
    	   	PdfOutline root = pdf.getOutlines(false);
@@ -222,12 +265,17 @@ public class GiRedactor {
    	 	
    	    pdf.close();
    	    
+   	    if (os!=null) {
+   	    	baos.writeTo(os);
+   	   	    os.flush();
+   	    }
+   	    
    	    tmpf.delete();
    	    
     	long finish = System.currentTimeMillis();
     	long timeElapsed = finish - start;
     	String sizeBefore=String.format("%.2f",(double)f.length()/(1024.0*1024.0));
-    	f=new File(output);
+    	f=new File(os!=null ? "" : output);
     	String sizeAfter=String.format("%.2f",(double)f.length()/(1024.0*1024.0));
     	return baseName+"\t"+timeElapsed+"\t"+pageList.size()+"\t"+pageListString+"\t"+sizeBefore+"\t"+sizeAfter;
       }
