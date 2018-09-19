@@ -1,6 +1,8 @@
 package iText;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -154,6 +156,19 @@ public class GiRedactor {
     
     public static String gsConvert(String input, String output, String gsbat) throws Exception {
     	long start = System.currentTimeMillis();
+    	String tempFolder = System.getProperty("java.io.tmpdir");
+    	
+    	File f = new File(input);
+   	   	String baseName=f.getName();
+   	   	
+   	   	String tmpInputCopyPathName=tempFolder+baseName;
+   	   	
+   	   	File tmpf= new File(tmpInputCopyPathName);
+   	   	
+   	   	Files.copy(f.toPath(), tmpf.toPath(), StandardCopyOption.REPLACE_EXISTING);
+   	   	
+   	   	input=tmpInputCopyPathName;
+    	
     	List<PdfCleanUpLocation> cleanupLocations=getCleanupLocations(input);
     	int locationCount=cleanupLocations.size();
     	if (locationCount==0) return "0";
@@ -163,9 +178,6 @@ public class GiRedactor {
    	   	PdfNameTree destsTree=pdf.getCatalog().getNameTree(PdfName.Dests);
    	   	PdfOutline root = pdf.getOutlines(false);
    	   	Bookmark origOutline=walkOutlines(root, destsTree.getNames(), pdf, null);	// shrani outline, da ga pozneje rebuildaš
-   	   	
-   	   	File f = new File(input);
-   	   	String baseName=f.getName();
    	   	
    	   	LinkedHashSet<Integer> pageList=new LinkedHashSet<>();
    	   	String pageListString="";
@@ -209,6 +221,8 @@ public class GiRedactor {
    	 	rebuildOutline(root,origOutline);
    	 	
    	    pdf.close();
+   	    
+   	    tmpf.delete();
    	    
     	long finish = System.currentTimeMillis();
     	long timeElapsed = finish - start;
