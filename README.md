@@ -19,9 +19,11 @@ GiRedactor.gsConvert(input,output,gsbat);
 or
 
 ```
-GiRedactor.gsConvert(filePath,gsbat,System.out);
+GiRedactor.gsConvert(filePath,System.out,gsbat);  //streams the result to System.out
 ```
 
 See the gsConvert function description in the code: https://github.com/gis-tomazz/GiRedactor/blob/master/GiRedactor.java#L144
+
+
 
 
