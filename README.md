@@ -15,7 +15,11 @@ String output="c:\\test\\test_out.pdf";
 String gsbat="c:\\bin\\gs.bat";
 
 GiRedactor.gsConvert(input,output,gsbat);
+```
+or
 
+```
+GiRedactor.gsConvert(filePath,gsbat,System.out);
 ```
 
 See the gsConvert function description in the code: https://github.com/gis-tomazz/GiRedactor/blob/master/GiRedactor.java#L144
