@@ -106,21 +106,14 @@ public class GiRedactor {
     /*
      * Vrne seznam lokacij EMŠO številk v PDF-ju z OCR slojem
      * 
-     * @param input pot do vhodne datoteke, npr. c:\testi\mojDokument.pdf
+     * @param pdf PdfDocument objekt, npr. new PdfDocument(new PdfReader("pot do pdf datoteke"));
      * 
      * @return seznam lokacij EMŠO številk
      */
     
-    public static ArrayList<PdfCleanUpLocation> getCleanupLocations(String input) throws Exception {
-  		PdfDocument pdf;
-  	   	ArrayList<PdfCleanUpLocation> cleanupLocations=new ArrayList<PdfCleanUpLocation>();
-  	   	
-  	   	try {
-  	   		pdf = new PdfDocument(new PdfReader(input));
-  	   	} catch (Exception e) {
-  			return cleanupLocations;
-  		}
-  	    		    
+    public static ArrayList<PdfCleanUpLocationWithText> getCleanupLocations(PdfDocument pdf) throws Exception {
+  	   	ArrayList<PdfCleanUpLocationWithText> cleanupLocations=new ArrayList<PdfCleanUpLocationWithText>();
+  	   	  	    		    
   	    int n = pdf.getNumberOfPages();
   	    
   	    for (int i = 1; i <= n; i++) {
@@ -135,14 +128,48 @@ public class GiRedactor {
   		    	IPdfTextLocation current=it.next();
   	        	String emso=current.getText();
   	        	if (isEmso(emso)) {
-  	        		cleanupLocations.add(new PdfCleanUpLocation(i,current.getRectangle(),ColorConstants.BLACK));
+  	        		cleanupLocations.add(new PdfCleanUpLocationWithText(i,current.getRectangle(),ColorConstants.BLACK,emso));
   	        	}
               }
   	    }
-  	    
-  	    pdf.close();
 		
   	    return cleanupLocations;
+     }
+    
+    /*
+     * Filtrira seznam lokacij, tako da pogleda, če je ob najdeni številki na levi ali desni strani še kakšna številka
+     * 
+     * @param input pot do vhodne datoteke, npr. c:\testi\mojDokument.pdf
+     * 
+     * @return seznam lokacij EMŠO številk
+     */
+    
+    public static ArrayList<PdfCleanUpLocation> filterCleanupLocations(PdfDocument pdf,ArrayList<PdfCleanUpLocationWithText> locations) throws Exception {
+    	ArrayList<PdfCleanUpLocation> filteredLocations=new ArrayList<PdfCleanUpLocation>();
+    	for (int i=0;i<locations.size();i++) {
+    		PdfCleanUpLocationWithText location=locations.get(i);
+    		String emso=location._text;
+    		int ipage=location.getPage();
+    		
+    		PdfPage page = pdf.getPage(ipage);
+  	        
+  	        RegexBasedCleanupStrategy strategy = new RegexBasedCleanupStrategy("(\\d*)"+emso+"(\\d*)");
+  		    PdfAutoSweep autoSweep = new PdfAutoSweep(strategy);
+  		    autoSweep.getPdfCleanUpLocations(page);
+  		    
+  		    Iterator<IPdfTextLocation> it=strategy.getResultantLocations().iterator();
+		    
+		    while (it.hasNext()){
+		    	IPdfTextLocation current=it.next();
+	        	String emso2=current.getText();
+	        	if (emso2.equals(emso)) {
+	  		    	filteredLocations.add(location);
+	  		    	break;
+	  	  		}    		
+	        }
+    	}
+    	
+    	return filteredLocations;
      }
     
     /*
@@ -201,22 +228,25 @@ public class GiRedactor {
    	   	Files.copy(f.toPath(), tmpf.toPath(), StandardCopyOption.REPLACE_EXISTING);
    	   	
    	   	input=tmpInputCopyPathName;
+   	   	
+   	   	PdfReader pdfReader=new PdfReader(input);
+   	   	
+	   	PdfWriter pdfWriter;
+	 	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	 	
+	 	if (os!=null) {
+	 		pdfWriter = new PdfWriter(baos);
+	 	}
+	 	else {
+	 		pdfWriter = new PdfWriter(output);    		
+	 	}
+	 	
+	 	PdfDocument pdf = new PdfDocument(pdfReader,pdfWriter);
     	
-    	List<PdfCleanUpLocation> cleanupLocations=getCleanupLocations(input);
+    	ArrayList<PdfCleanUpLocation> cleanupLocations=filterCleanupLocations(pdf, getCleanupLocations(pdf));
+
     	int locationCount=cleanupLocations.size();
     	if (locationCount==0) return "0";
-    	
-    	PdfWriter pdfWriter;
-    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    	
-    	if (os!=null) {
-    		pdfWriter = new PdfWriter(baos);
-    	}
-    	else {
-    		pdfWriter = new PdfWriter(output);    		
-    	}
-    	
-   		PdfDocument pdf = new PdfDocument(new PdfReader(input),pdfWriter);
    	   	
    	   	PdfNameTree destsTree=pdf.getCatalog().getNameTree(PdfName.Dests);
    	   	PdfOutline root = pdf.getOutlines(false);
