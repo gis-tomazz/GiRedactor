@@ -174,7 +174,7 @@ public class GiRedactor {
      }
     
     /*
-     * Zakrije EMŠO v PDF-ju z OCR slojem in shrani rezultat v datoteko
+     * Zakrije EMŠO v PDF-ju z OCR slojem in zapiše podatke v output stream
      * 
      * @param input pot do vhodne datoteke,  npr. c:\testi\mojDokument.pdf
      * @param output OutputStream, npr. System.out
