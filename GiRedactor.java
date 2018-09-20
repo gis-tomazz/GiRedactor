@@ -139,7 +139,8 @@ public class GiRedactor {
     /*
      * Filtrira seznam lokacij, tako da pogleda, če je ob najdeni številki na levi ali desni strani še kakšna številka
      * 
-     * @param input pot do vhodne datoteke, npr. c:\testi\mojDokument.pdf
+     * @param pdf PdfDocument objekt, npr. new PdfDocument(new PdfReader("pot do pdf datoteke"));
+     * @param locations najdene lokacije EMŠO številk
      * 
      * @return seznam lokacij EMŠO številk
      */
