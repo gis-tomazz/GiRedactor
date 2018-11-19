@@ -11,7 +11,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
-import com.itextpdf.licensekey.LicenseKey;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.pdf.PdfDictionary;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -175,20 +174,18 @@ public class GiRedactor {
      }
     
     /*
-     * Zakrije EMŠO v PDF-ju z OCR slojem in zapiše podatke v output stream
+     * Zakrije EMŠO v PDF-ju z OCR slojem in shrani rezultat v datoteko
      * 
      * @param input pot do vhodne datoteke,  npr. c:\testi\mojDokument.pdf
      * @param output OutputStream, npr. System.out
      * @param gsbat pot do batch datoteke (npr.: "c:\\bin\\gs.bat")
-     * @param itext7licenceKeyPath pot do itext7 core licence (AGPL licenca, če je vrednost parametra NULL - ključ se v tem primeru ne preverja) 
-     * @param itext7pdfSweepPath pot do itext7 pdfSweep licence (AGPL licenca, če je vrednost parametra NULL - ključ se v tem primeru ne preverja)
      * 
      * @return tab separated podatki o zakrivanju (baseName datoteke, porabljen čas za zakrivanje, število strani z emšo, seznam strani z emšo, velikost datoteke pred zakrivanjem, velikost datoteke po zakrivanju oziroma "0", če v dokumentu ne najde EMŠO 
      *   
      */
     
-    public static String gsConvert(String input, OutputStream output, String gsbat, String itext7licenceKeyPath, String itext7pdfSweepPath) throws Exception {
-    	return gsConvert(input, null, gsbat, output, itext7licenceKeyPath, itext7pdfSweepPath);
+    public static String gsConvert(String input, OutputStream output, String gsbat) throws Exception {
+    	return gsConvert(input, null, gsbat, output);
     }
     
     /*
@@ -197,15 +194,13 @@ public class GiRedactor {
      * @param input pot do vhodne datoteke,  npr. c:\testi\mojDokument.pdf
      * @param output ime izhodne datoteke (če že obstaja, bo prepisana; če je odprta bo vrgel exception),  npr. c:\output\mojDokument_redacted.pdf
      * @param gsbat pot do batch datoteke (npr.: "c:\\bin\\gs.bat")
-     * @param itext7licenceKeyPath pot do itext7 core licence (AGPL licenca, če je vrednost parametra NULL - ključ se v tem primeru ne preverja)
-     * @param itext7pdfSweepPath pot do itext7 pdfSweep licence (AGPL licenca, če je vrednost parametra NULL - ključ se v tem primeru ne preverja)
      * 
      * @return tab separated podatki o zakrivanju (baseName datoteke, porabljen čas za zakrivanje, število strani z emšo, seznam strani z emšo, velikost datoteke pred zakrivanjem, velikost datoteke po zakrivanju oziroma "0", če v dokumentu ne najde EMŠO 
      *   
      */
     
-    public static String gsConvert(String input, String output, String gsbat, String itext7licenceKeyPath, String itext7pdfSweepPath) throws Exception {
-    	return gsConvert(input, output, gsbat, null, itext7licenceKeyPath, itext7pdfSweepPath);
+    public static String gsConvert(String input, String output, String gsbat) throws Exception {
+    	return gsConvert(input, output, gsbat, null);
     }
         
     /*
@@ -214,20 +209,14 @@ public class GiRedactor {
      * @param input pot do vhodne datoteke,  npr. c:\testi\mojDokument.pdf
      * @param output ime izhodne datoteke (če že obstaja, bo prepisana; če je odprta bo vrgel exception),  npr. c:\output\mojDokument_redacted.pdf
      * @param gsbat pot do batch datoteke (npr.: "c:\\bin\\gs.bat") z naslednjo vsebino (prilagodi pot do Ghostscripta v batch datoteki glede na svoj sistem):    	   	//"C:\Program Files\gs\gs9.06\bin\gswin64c.exe" -dFirstPage=%1 -dLastPage=%2 -dSAFER -dBATCH -dNOPAUSE -dNOCACHE -sDEVICE=pdfwrite -sColorConversionStrategy=/LeaveColorUnchanged -dAutoFilterColorImages=true -dAutoFilterGrayImages=true -dDownsampleMonoImages=false -dDownsampleGrayImages=false -dDownsampleColorImages=false -q -sOutputFile=%%stdout %3 2> nul
-     * @param os, OutputStream, če je različen od null se podatki izpišejo na OutputStream in ne v izhodno datoteko določeno z output; v tem primeru je lahko ime izhodne datoteke poljubno, ker se zanemari
-     * @param itext7licenceKeyPath pot do itext7 core licence (AGPL licenca, če je vrednost parametra NULL - ključ se v tem primeru ne preverja)
-     * @param itext7pdfSweepPath pot do itext7 pdfSweep licence (AGPL licenca, če je vrednost parametra NULL - ključ se v tem primeru ne preverja)
+     * @param os, OutputStream, če je različen od nič se podatki izpišejo na OutputStream in ne v izhodno datoteko določeno z output; v tem primeru je lahko ime izhodne datoteke poljubno, ker se zanemari
      * 
      * @return tab separated podatki o zakrivanju (baseName datoteke, porabljen čas za zakrivanje, število strani z emšo, seznam strani z emšo, velikost datoteke pred zakrivanjem, velikost datoteke po zakrivanju oziroma "0", če v dokumentu ne najde EMŠO 
      *   
      */
         
-    public static String gsConvert(String input, String output, String gsbat, OutputStream os, String itext7licenceKeyPath, String itext7pdfSweepPath) throws Exception {
+    public static String gsConvert(String input, String output, String gsbat, OutputStream os) throws Exception {
     	long start = System.currentTimeMillis();
-    	
-    	if (itext7licenceKeyPath != null) LicenseKey.loadLicenseFile(itext7licenceKeyPath);
-    	if (itext7pdfSweepPath != null) LicenseKey.loadLicenseFile(itext7pdfSweepPath);
-    	
     	String tempFolder = System.getProperty("java.io.tmpdir");
     	
     	File f = new File(input);
